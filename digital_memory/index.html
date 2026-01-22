@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title> Digital Memories</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #11162a;
+      --accent: #6366f1;
+      --muted: #94a3b8;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #020617, #0b1020);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(11,16,32,.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      margin: 0;
+       /* Gradient color for text only */
+       background: linear-gradient(90deg, #6366f1, #22d3ee);
+       -webkit-background-clip: text;
+       -webkit-text-fill-color: transparent;
+    }
+
+    header a {
+      color: var(--muted);
+      margin-left: 1.2rem;
+      text-decoration: none;
+      font-weight: 500;
+      transition: .2s;
+    }
+
+    header a:hover { color: var(--white); }
+
+    .container { padding: 2rem; }
+
+    h2 { font-weight: 700; margin-bottom: 1rem; }
+    h3 { color: var(--muted); }
+
+    /* Masonry Layout */
+    .masonry {
+      columns: 4 240px;
+      column-gap: 1rem;
+    }
+
+    .masonry img {
+      width: 100%;
+      margin-bottom: 1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .25s, box-shadow .25s;
+    }
+
+    .masonry img:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,.45);
+    }
+
+    /* Forms */
+    form {
+      max-width: 420px;
+      margin: 3rem auto;
+      background: rgba(17,22,42,.95);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    }
+
+    input {
+      width: 100%;
+      padding: .7rem .8rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: #020617;
+      color: var(--white);
+      outline: none;
+    }
+
+    button {
+      padding: .7rem 1.4rem;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #3b3da7, #818cf8);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s;
+      box-shadow: 0 10px 25px rgba(99,102,241,.35);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 35px rgba(99,102,241,.45);
+      opacity: .95;
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(99,102,241,.3);
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .masonry { columns: 2 160px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Sanjukta's - ArtWork</h1>
+  <nav id="nav"></nav>
+  <button id="clearBtn" onclick="clearAllData()" class="clear-btn">Clear Data</button>
+</header>
+
+<div class="container">
+
+  <!-- Landing Page -->
+  <section id="landing">
+    <h2>Explore Digital Memories</h2>
+    <div class="masonry" id="publicImages"></div>
+  </section>
+
+  <!-- Signup Page -->
+  <section id="signup" class="hidden">
+    <form onsubmit="signup(event)">
+      <h2>Create Account</h2>
+      <input id="suUser" placeholder="Username" required />
+      <input id="suPass" type="password" placeholder="Password" required />
+      <button>Sign Up</button>
+    </form>
+  </section>
+
+  <!-- Login Page -->
+  <section id="login" class="hidden">
+    <form onsubmit="login(event)">
+      <h2>Welcome Back</h2>
+      <input id="liUser" placeholder="Username" required />
+      <input id="liPass" type="password" placeholder="Password" required />
+      <button>Login</button>
+    </form>
+  </section>
+
+  <!-- Private Dashboard -->
+  <section id="dashboard" class="hidden">
+    <h2>Your Dashboard</h2>
+    <form onsubmit="uploadImage(event)">
+      <input type="file" accept="image/*" required />
+      <button>Upload Artwork</button>
+    </form>
+    <h3>Your Uploads</h3>
+    <div class="masonry" id="userImages"></div>
+  </section>
+
+  <!-- Public Profile -->
+  <section id="publicProfile" class="hidden">
+    <h2 id="publicUsername"></h2>
+    <div class="masonry" id="publicUserImages"></div>
+  </section>
+
+</div>
+
+<script>
+  /* Data Storage */
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  let currentUser = localStorage.getItem('currentUser');
+
+  const saveUsers = () => localStorage.setItem('users', JSON.stringify(users));
+
+  /* Navigation */
+  function setNav() {
+    nav.innerHTML = currentUser
+      ? `<a href="#dashboard">Dashboard</a><a href="#" onclick="logout()">Logout</a>`
+      : `<a href="#signup">Sign Up</a><a href="#login">Login</a>`;
+  }
+
+  function show(section) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(section).classList.remove('hidden');
+  }
+
+  /* Auth */
+  function signup(e) {
+    e.preventDefault();
+    if (users[suUser.value]) return alert('User already exists');
+    users[suUser.value] = { password: suPass.value, images: [] };
+    saveUsers();
+    location.hash = '#login';
+  }
+
+  function login(e) {
+    e.preventDefault();
+    if (!users[liUser.value] || users[liUser.value].password !== liPass.value)
+      return alert('Invalid credentials');
+    currentUser = liUser.value;
+    localStorage.setItem('currentUser', currentUser);
+    location.hash = '#dashboard';
+  }
+
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    location.hash = '#';
+  }
+
+  /* Image Upload */
+  function uploadImage(e) {
+    e.preventDefault();
+    const file = e.target.querySelector('input').files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      users[currentUser].images.push(reader.result);
+      saveUsers();
+      renderUserImages();
+      renderLanding();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* Rendering */
+  function renderLanding() {
+    publicImages.innerHTML = '';
+    Object.keys(users).forEach(u => users[u].images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.onclick = () => location.hash = `#profile/${u}`;
+      publicImages.appendChild(img);
+    }));
+  }
+
+  function renderUserImages() {
+    userImages.innerHTML = '';
+    users[currentUser].images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src;
+      userImages.appendChild(img);
+    });
+  }
+
+  function renderPublicProfile(user) {
+    publicUsername.textContent = user;
+    publicUserImages.innerHTML = '';
+    users[user]?.images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src;
+      publicUserImages.appendChild(img);
+    });
+  }
+
+  /* Router */
+  function router() {
+    setNav();
+    const hash = location.hash.replace('#','');
+
+    if (hash.startsWith('profile/')) {
+      show('publicProfile');
+      renderPublicProfile(hash.split('/')[1]);
+    }
+    else if (hash === 'signup') show('signup');
+    else if (hash === 'login') show('login');
+    else if (hash === 'dashboard' && currentUser) {
+      show('dashboard');
+      renderUserImages();
+    }
+    else {
+      show('landing');
+      renderLanding();
+    }
+  }
+
+  window.addEventListener('hashchange', router);
+  router();
+  function clearAllData() {
+    if (!confirm('Are you sure you want to clear all stored data?')) return;
+    localStorage.clear();
+    location.hash = '#';
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
