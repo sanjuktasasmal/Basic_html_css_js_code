@@ -1,0 +1,15 @@
+body{
+    background-color: rgb(213, 187, 237);
+}
+
+#comment_btn{
+    background-color: blueviolet;
+    border-radius: 5px;
+    padding: 5px;
+    color: white;
+    
+}
+#comment_box{
+     background-color: rgb(213, 187, 237);
+     border-radius: 2px;
+}
